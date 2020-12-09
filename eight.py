@@ -18,14 +18,15 @@ for city in lines[:number_of_locations]:
     coordinates = str(x[1]).replace("(", "").replace(")", "").split(",")
     locations[x[0]] = list(map(int, coordinates))
 
+max_x = 0
+max_y = 0
+for coordinates in locations.values():
+    if(coordinates[0] > max_x):
+        max_x = coordinates[0]
+    if(coordinates[1] > max_y):
+        max_y = coordinates[1]
 
-# max_x = 0
-# max_y = 0
-# for location in locations:
-
-dimension = (500, 500)
-
-paths_taken = np.zeros(dimension, dtype=int)
+paths_taken = np.zeros((max_y + 1, max_x + 1), dtype=int)
 steps = 0
 x = 0
 y = 0
@@ -53,51 +54,43 @@ for city in route:
             paths_taken[y, x] += 1
             steps += 1
 
-times = np.zeros(dimension)  # may fix later
-times += steps
-
 # print(paths_taken)
 
-for y in range(paths_taken.shape[0]):
-    print(y)
-    for x in range(paths_taken.shape[1]):
-        at_pixel = 0
-        pixel_5 = 0
-        pixel_20 = 0
-        pixel_50 = 0
-        for yi in range(y - 50, y + 51):
-            if(yi < 0 or yi >= paths_taken.shape[0]):
+times = {}
+for city, coordinates in locations.items():
+    x = coordinates[0]
+    y = coordinates[1]
+    at_pixel = 0
+    pixel_5 = 0
+    pixel_20 = 0
+    pixel_50 = 0
+    for yi in range(y - 50, y + 51):
+        if(yi < 0 or yi >= paths_taken.shape[0]):
+            continue
+        for xi in range(x - 50, x + 51):
+            if(xi < 0 or xi >= paths_taken.shape[1]):
                 continue
-            for xi in range(x - 50, x + 51):
-                if(xi < 0 or xi >= paths_taken.shape[1]):
-                    continue
 
-                diff_x = abs(xi - x)
-                diff_y = abs(yi - y)
-                distance = diff_x + diff_y
-                # print(distance)
-                if(distance >= 50):
-                    continue
-                elif(distance >= 20):
-                    pixel_50 += paths_taken[yi, xi]
-                elif(distance >= 5):
-                    pixel_20 += paths_taken[yi, xi]
-                elif(distance >= 1):
-                    pixel_5 += paths_taken[yi, xi]
-                else:
-                    at_pixel += paths_taken[yi, xi]
+            diff_x = abs(xi - x)
+            diff_y = abs(yi - y)
+            distance = diff_x + diff_y
+            # print(distance)
+            if(distance >= 50):
+                continue
+            elif(distance >= 20):
+                pixel_50 += paths_taken[yi, xi]
+            elif(distance >= 5):
+                pixel_20 += paths_taken[yi, xi]
+            elif(distance >= 1):
+                pixel_5 += paths_taken[yi, xi]
+            else:
+                at_pixel += paths_taken[yi, xi]
 
-        # print(at_pixel, pixel_5, pixel_20, pixel_50)
+    # print(at_pixel, pixel_5, pixel_20, pixel_50)
 
-        times[y, x] -= at_pixel
-        times[y, x] -= pixel_5 * 0.75
-        times[y, x] -= pixel_20 * 0.5
-        times[y, x] -= pixel_50 * 0.25
+    time_to_subtract = at_pixel + pixel_5 * 0.75 + pixel_20 * 0.5 + pixel_50 * 0.25
+    times[city] = steps - time_to_subtract
 
 # print(times)
 
-location_times = []
-for coordinates in locations.values():
-    location_times.append(times[coordinates[1], coordinates[0]])
-
-print(max(location_times) - min(location_times))
+print(max(times.values()) - min(times.values()))
