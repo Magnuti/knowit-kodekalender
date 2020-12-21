@@ -1,18 +1,6 @@
 from collections import defaultdict
 
 
-def print_elves(d):
-    print()
-    for elf in d.values():
-        print(elf)
-
-
-def print_lines(l):
-    print()
-    for line in l:
-        print(line)
-
-
 class Elf:
     def __init__(self, name):
         self.name = name
@@ -72,48 +60,27 @@ for names in lines:
     for i in range(len(names) - 1):
         elves[names[i]].children.add(names[i + 1])
 
-
-def prune_elf(elf_to_prune):
-    for elf in elves.values():
-        if(elf_to_prune.name in elf.children):
-            elf.children.remove(elf_to_prune.name)
-            elf.children = elf.children.union(elf_to_prune.children)
-
-    del elves[elf_to_prune.name]
-
-
 print("Pruning managers with 1 child manager...")
-changed = True
-while changed:
-    changed = False
-    for key, elf in elves.items():
-        if(len(elf.children) == 1):
-            c_name = list(elf.children)[0]
-            if(len(elves[c_name].children) > 0):
-                prune_elf(elf)
-                changed = True
-                break
+to_prune = set()
+for key, elf in elves.items():
+    if(len(elf.children) == 1):
+        child_name = list(elf.children)[0]
+        if(len(elves[child_name].children) > 0):
+            # Prune where the only child is a manager
+            to_prune.add(elf.name)
 
-
-# print_lines(lines)
-
-# print_elves(elves)
+for name in to_prune:
+    del elves[name]
 
 print("Gathering results...")
 
-managers = []
-workers = []
+managers = 0
+workers = 0
 for key, elf in elves.items():
     if(len(elf.children) == 0):
-        # workers += 1
-        workers.append(key)
+        workers += 1
     else:
-        # managers += 1
-        managers.append(key)
+        managers += 1
 
-# print("Workers", workers)
-# print("Managers", managers)
-workers = len(workers)
-managers = len(managers)
 print("Workers: {}, managers: {}, difference: {}".format(
     workers, managers, workers - managers))
